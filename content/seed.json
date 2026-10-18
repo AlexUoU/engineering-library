@@ -1,0 +1,1385 @@
+{
+  "schema": 1,
+  "created_at": "2026-10-16T10:37:33+00:00",
+  "articles": [
+    {
+      "id": "building-effective-agents",
+      "number": 1,
+      "title": "先选最简单的方案：从工作流到 Agent",
+      "topic": 0,
+      "url": "https://www.anthropic.com/engineering/building-effective-agents",
+      "summary": "文章区分预先安排路径的工作流与由模型动态决定行动的 Agent，并建议从简单方案起步。",
+      "published_at": "2024-12-19",
+      "source": {
+        "title": "Building effective agents",
+        "url": "https://www.anthropic.com/engineering/building-effective-agents",
+        "resolved_url": "https://www.anthropic.com/engineering/building-effective-agents",
+        "published_at": "2024-12-19T00:00:00.000Z",
+        "source_modified_at": "2026-08-10T22:57:30.000Z",
+        "digest": "6d3252574f1b66fa4bc43a02aaca419772208c9c4d53ba8c8e39c9ac4a362861"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "做一个资料助手时，应该把步骤提前写好，还是让模型自行决定下一步？如果只是固定格式的周报归档，引入自主规划可能徒增复杂度；如果需要根据新证据不断调整调查方向，固定流程又可能不够用。先辨认任务中的不确定性，才能选择合适的实现方式。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "先判断步骤能否预先确定，再决定是否需要动态规划。检索、工具和记忆可以增强模型，但复杂度应由实际任务推动。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "灵活性会带来额外成本和不确定性。开放式任务也需要明确完成条件，不能把自由行动等同于无限循环。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】你要做一个资料助手：一种请求只把固定格式周报归档，另一种请求需要调查互相矛盾的资料。先分别写出可预知的步骤，再圈出必须根据发现改变方向的环节。两类请求不必共用同一种架构。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章区分预先安排路径的工作流与由模型动态决定行动的 Agent，并建议从简单方案起步。先判断步骤能否预先确定，再决定是否需要动态规划。检索、工具和记忆可以增强模型，但复杂度应由实际任务推动。"
+        },
+        {
+          "prompt": "固定周报归档与开放式资料调查，分别更适合什么方案？",
+          "points": "归档优先考虑确定流程；调查才可能需要动态行动。说明理由、工具边界与完成条件，而不只给架构命名。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "灵活性会带来额外成本和不确定性。开放式任务也需要明确完成条件，不能把自由行动等同于无限循环。"
+        }
+      ]
+    },
+    {
+      "id": "contextual-retrieval",
+      "number": 2,
+      "title": "让知识片段带上来龙去脉",
+      "topic": 1,
+      "url": "https://www.anthropic.com/engineering/contextual-retrieval",
+      "summary": "文章介绍在知识片段中补充上下文，并结合语义检索与关键词检索改善资料召回。",
+      "published_at": "2024-09-19",
+      "source": {
+        "title": "Introducing Contextual Retrieval",
+        "url": "https://www.anthropic.com/engineering/contextual-retrieval",
+        "resolved_url": "https://www.anthropic.com/engineering/contextual-retrieval",
+        "published_at": "2024-09-19T00:00:00.000Z",
+        "source_modified_at": "2026-01-07T15:00:44.000Z",
+        "digest": "02dcad0574f68dde90b95ae83d3a6d80efbdd5197a7bda59f35201d2c8ee7bb4"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "资料库里有一句“本季度增长明显”，却没有说明是哪家公司、哪个季度、什么指标。即使这句话与查询很相似，找到它也未必有用。知识切成片段之后，怎样保留足以辨认含义的背景，同时不凭空补充事实？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "孤立片段可能丢失主体、时间或所属文档。将必要背景与片段一起索引，让检索既能识别含义，也能匹配专有名词。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "背景补充必须忠实于原文；召回改善不等于最终回答必然正确，还要检查引用与答案。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】知识库片段只有“本季度增长明显”。把它改成可追溯记录：所属公司、季度、指标、来源段落，以及仍然未知的内容。不要为填字段猜测数值。随后设计一个缩写查询和一个自然语言查询。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章介绍在知识片段中补充上下文，并结合语义检索与关键词检索改善资料召回。孤立片段可能丢失主体、时间或所属文档。将必要背景与片段一起索引，让检索既能识别含义，也能匹配专有名词。"
+        },
+        {
+          "prompt": "资料片段缺少公司和季度时，应怎样改进索引并验证效果？",
+          "points": "补充可靠背景，保留来源；分别测试关键词和语义查询。用已知相关文档核对召回，不用回答流畅度代替检索验证。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "背景补充必须忠实于原文；召回改善不等于最终回答必然正确，还要检查引用与答案。"
+        }
+      ]
+    },
+    {
+      "id": "swe-bench-sonnet",
+      "number": 3,
+      "title": "代码评测：模型之外还有执行系统",
+      "topic": 5,
+      "url": "https://www.anthropic.com/engineering/swe-bench-sonnet",
+      "summary": "文章讨论 Claude 在 SWE-bench Verified 上的工程实践，展示评测结果与工具、执行安排的关系。",
+      "published_at": "2025-01-06",
+      "source": {
+        "title": "Raising the bar on SWE-bench Verified with Claude 3.5 Sonnet",
+        "url": "https://www.anthropic.com/engineering/swe-bench-sonnet",
+        "resolved_url": "https://www.anthropic.com/engineering/swe-bench-sonnet",
+        "published_at": "2025-01-06T00:00:00.000Z",
+        "source_modified_at": "2025-03-19T20:43:04.000Z",
+        "digest": "641a659ac1047021124ecd350c1558777f296a46cd8e8ff05bb99809690914be"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "两个编码助手修复同一批缺陷，一个可以反复运行测试，另一个只能提交一次。结果不同，究竟是模型能力不同，还是工具和执行安排带来的差异？评测之前，需要先说清楚我们比较的是模型，还是包含执行系统的整个助手。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "编码评测需要把任务输入、代码操作、测试执行与结果判断连接起来。比较成绩时，应同时记录模型与运行方案。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "特定基准的历史结果不能直接推导今天的产品能力，也不能代替你自己任务上的验证。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】两个修复助手都运行十个历史缺陷。A 允许多轮测试，B 只能提交一次。即使 A 修复更多，也先列出条件差异，再设计相同预算的重测方案。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章讨论 Claude 在 SWE-bench Verified 上的工程实践，展示评测结果与工具、执行安排的关系。编码评测需要把任务输入、代码操作、测试执行与结果判断连接起来。比较成绩时，应同时记录模型与运行方案。"
+        },
+        {
+          "prompt": "为何不能只凭两个编码助手的单个榜单分数判断优劣？",
+          "points": "需要核对模型、工具、尝试次数、测试集和运行预算。补充真实任务结果，并注明不能比较的部分。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "特定基准的历史结果不能直接推导今天的产品能力，也不能代替你自己任务上的验证。"
+        }
+      ]
+    },
+    {
+      "id": "claude-think-tool",
+      "number": 4,
+      "title": "在复杂工具流程中留出检查环节",
+      "topic": 0,
+      "url": "https://www.anthropic.com/engineering/claude-think-tool",
+      "summary": "文章研究在复杂工具使用过程中设置显式思考环节，帮助模型整理已有信息并核对下一步行动。",
+      "published_at": "2025-03-20",
+      "source": {
+        "title": "The \"think\" tool: Enabling Claude to stop and think in complex tool use situations",
+        "url": "https://www.anthropic.com/engineering/claude-think-tool",
+        "resolved_url": "https://www.anthropic.com/engineering/claude-think-tool",
+        "published_at": "2025-03-20T00:00:00.000Z",
+        "source_modified_at": "2025-12-15T18:02:25.000Z",
+        "digest": "c9ecdae635dc0d12936505ae51e536d10ce8612577244b2e43caac93478127dd"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "助手已经查到资料，正准备执行下一步操作，但它是否还记得用户的限制、前一步的结果和必须满足的条件？复杂工具流程中的失误，可能来自没有在关键时刻重新核对。值得思考的是把检查放在哪里，以及检查需要留下什么可见证据。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "将行动前的条件检查显式化：已知事实、尚缺信息、约束和下一步。它关注工具流程中的决策时机。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "这是一项特定实验中的方法，不意味着增加思考步骤总有收益；也不必要求模型暴露内部推理。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】资料助手准备发出“已完成归档”的回复。给它一张简短核对表：目标文件是否存在、内容是否读回、权限是否满足、失败时如何报告。把核对依据写成可见证据。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章研究在复杂工具使用过程中设置显式思考环节，帮助模型整理已有信息并核对下一步行动。将行动前的条件检查显式化：已知事实、尚缺信息、约束和下一步。它关注工具流程中的决策时机。"
+        },
+        {
+          "prompt": "在资料归档流程的哪个位置加入显式核对最有价值？",
+          "points": "在关键动作前后核对约束与结果；使用文件存在、读回等可见证据。解释增加环节的成本。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "这是一项特定实验中的方法，不意味着增加思考步骤总有收益；也不必要求模型暴露内部推理。"
+        }
+      ]
+    },
+    {
+      "id": "claude-code-best-practices",
+      "number": 5,
+      "title": "把编码任务变成可验证的小步",
+      "topic": 3,
+      "url": "https://www.anthropic.com/engineering/claude-code-best-practices",
+      "summary": "栏目旧链接已跳转至持续维护的 Claude Code 最佳实践文档，学习时应区分原发布日期与当前文档状态。",
+      "published_at": "2025-04-18",
+      "source": {
+        "title": "Best practices for Claude Code",
+        "url": "https://www.anthropic.com/engineering/claude-code-best-practices",
+        "resolved_url": "https://code.claude.com/docs/en/best-practices",
+        "published_at": null,
+        "source_modified_at": null,
+        "digest": "97267f465859a7f3d64dbc3eb0a9975e593ec73ab0b934cee752d32cd220fa10"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "一句“把搜索修好”没有说明哪里出错，也没有说明怎样才算修好。助手可能改了很多代码，却没有触及用户遇到的问题。开始编码前，怎样把模糊诉求变成可以复现、范围清楚、能够验证的小任务？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "给出明确目标、相关上下文和验证方式；先调查，再安排改动，最后用实际检查确认结果。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "工具命令与产品设置会变化。本导读讲工作方法，执行前应核对当前文档，不能把旧日期当成现行功能说明。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】将“修好搜索”改写为任务说明：指定复现场景、期望结果、相关范围，以及如何证明修复有效。再删去与问题无关的重构要求。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "栏目旧链接已跳转至持续维护的 Claude Code 最佳实践文档，学习时应区分原发布日期与当前文档状态。给出明确目标、相关上下文和验证方式；先调查，再安排改动，最后用实际检查确认结果。"
+        },
+        {
+          "prompt": "如何把“修好搜索”改写成可执行、可验证的任务？",
+          "points": "应有输入、实际行为、期望行为、范围和验收入口。完成依据是修复后的行为，而不只是生成代码。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "工具命令与产品设置会变化。本导读讲工作方法，执行前应核对当前文档，不能把旧日期当成现行功能说明。"
+        }
+      ]
+    },
+    {
+      "id": "multi-agent-research-system",
+      "number": 6,
+      "title": "多 Agent 研究：分工要有边界",
+      "topic": 4,
+      "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+      "summary": "文章介绍主 Agent 协调多个研究 Agent 的系统，讨论并行探索、信息汇总和可靠性挑战。",
+      "published_at": "2025-06-13",
+      "source": {
+        "title": "How we built our multi-agent research system",
+        "url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+        "resolved_url": "https://www.anthropic.com/engineering/multi-agent-research-system",
+        "published_at": "2025-06-13T00:00:00.000Z",
+        "source_modified_at": "2026-01-06T15:09:32.000Z",
+        "digest": "8133e956c879fdf398598a48d62ec34075d66910e343715d5855a43fc88a0e41"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "一项研究包含需求、资料可得性和风险三个方向。让一个助手顺序调查可能较慢，让三个助手同时调查又可能产生重复报告和冲突结论。拆分之前，需要确定哪些工作真正独立，以及汇总时怎样保留证据和处理分歧。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "将可以独立调查的方向分开，给出清楚的目标与交付格式，再由协调方综合证据、处理冲突。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "并行会增加成本和协调负担。高度依赖共享状态的任务，不应因为可以开更多 Agent 就全部拆开。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】调查“内部知识助手是否值得部署”。分别安排使用需求、数据可得性、风险约束三条调查线；每条都提交事实、来源、缺口，最后由一人合并，避免各写一篇互不相干的报告。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章介绍主 Agent 协调多个研究 Agent 的系统，讨论并行探索、信息汇总和可靠性挑战。将可以独立调查的方向分开，给出清楚的目标与交付格式，再由协调方综合证据、处理冲突。"
+        },
+        {
+          "prompt": "这项调查怎样划分独立任务，怎样避免最后得到三份重复报告？",
+          "points": "按问题边界分工，统一证据格式与返回要求，规定冲突处理和总预算。说明哪些决策必须集中。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "并行会增加成本和协调负担。高度依赖共享状态的任务，不应因为可以开更多 Agent 就全部拆开。"
+        }
+      ]
+    },
+    {
+      "id": "desktop-extensions",
+      "number": 7,
+      "title": "连接器安装也是产品体验",
+      "topic": 2,
+      "url": "https://www.anthropic.com/engineering/desktop-extensions",
+      "summary": "文章介绍通过桌面扩展简化 MCP 服务安装，将分散的安装配置步骤组织为更易使用的交付形式。",
+      "published_at": "2025-06-26",
+      "source": {
+        "title": "Desktop Extensions: One-click MCP server installation for Claude Desktop",
+        "url": "https://www.anthropic.com/engineering/desktop-extensions",
+        "resolved_url": "https://www.anthropic.com/engineering/desktop-extensions",
+        "published_at": "2025-06-26T00:00:00.000Z",
+        "source_modified_at": "2025-09-12T00:43:28.000Z",
+        "digest": "90c482315ae5db7eb637f8221eafc0e85e4408bf4b5fca4c4eab744b44bb1c39"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "一个连接器能在开发者电脑上运行，却要求普通用户自己安装依赖、配置路径和处理凭据。功能做出来了，使用入口仍然可能让人放弃。怎样把安装、授权、验证与卸载组织成用户能够完成的一条路径？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "把依赖、配置和安装入口一起考虑。对用户而言，能找到配置、知道授权范围、理解失败原因，同样属于功能。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "方便安装不代表连接器可信；安装包来源、权限和运行环境仍需核对。历史产品形式也可能变化。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】为一个内部文档连接器写首次使用说明：它读什么、不读什么，凭据存在哪里，如何确认连接成功，以及如何卸载。不能用“安装成功”代替“能正确读取文档”。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章介绍通过桌面扩展简化 MCP 服务安装，将分散的安装配置步骤组织为更易使用的交付形式。把依赖、配置和安装入口一起考虑。对用户而言，能找到配置、知道授权范围、理解失败原因，同样属于功能。"
+        },
+        {
+          "prompt": "连接器显示安装成功后，还应验证哪些真实行为？",
+          "points": "验证授权范围、读取目标文档、错误提示和卸载路径。将安装完成与功能可用分开。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "方便安装不代表连接器可信；安装包来源、权限和运行环境仍需核对。历史产品形式也可能变化。"
+        }
+      ]
+    },
+    {
+      "id": "writing-tools-for-agents",
+      "number": 8,
+      "title": "把工具设计成清楚的行动接口",
+      "topic": 2,
+      "url": "https://www.anthropic.com/engineering/writing-tools-for-agents",
+      "summary": "文章强调工具选择、命名、说明和返回信息都影响 Agent 表现，并用任务评测迭代工具设计。",
+      "published_at": "2025-09-11",
+      "source": {
+        "title": "Writing effective tools for agents — with agents",
+        "url": "https://www.anthropic.com/engineering/writing-tools-for-agents",
+        "resolved_url": "https://www.anthropic.com/engineering/writing-tools-for-agents",
+        "published_at": "2025-09-11T00:00:00.000Z",
+        "source_modified_at": "2026-01-06T15:05:23.000Z",
+        "digest": "304073c15949488247e23ae5cf182175c81b61aaef73ae1c79670c1fe782620e"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "助手面前有几个名称相近的搜索工具，参数只有含糊的 q，返回结果又缺少稳定文档编号。选错工具或引用错资料，未必是模型不理解任务，也可能是接口让正确行动变得困难。怎样设计一个足够清楚、又不过度暴露细节的工具？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "工具应表达真实任务，参数和返回值要有意义。让模型容易选对工具、理解结果并在出错时修正。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "把每个底层接口全部暴露并不一定更好。简短返回也不能省略完成任务必需的标识和证据。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】把含糊的 find(q) 改写为资料搜索契约：查询、可选日期范围、结果数量、稳定文档编号、摘要、来源和下一页入口。再设计“没有结果”和“同名文档”两个场景。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章强调工具选择、命名、说明和返回信息都影响 Agent 表现，并用任务评测迭代工具设计。工具应表达真实任务，参数和返回值要有意义。让模型容易选对工具、理解结果并在出错时修正。"
+        },
+        {
+          "prompt": "一个资料搜索工具需要哪些返回字段，才能支持后续可靠引用？",
+          "points": "应有稳定标识、相关摘要、来源与必要的分页信息；解释字段如何支持选择和引用，并测试歧义场景。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "把每个底层接口全部暴露并不一定更好。简短返回也不能省略完成任务必需的标识和证据。"
+        }
+      ]
+    },
+    {
+      "id": "a-postmortem-of-three-recent-issues",
+      "number": 9,
+      "title": "质量下降：先分层取证再归因",
+      "topic": 7,
+      "url": "https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues",
+      "summary": "这篇复盘说明多个基础设施问题如何叠加造成不同用户的质量下降，并讨论检测和排查的不足。",
+      "published_at": "2025-09-17",
+      "source": {
+        "title": "A postmortem of three recent issues",
+        "url": "https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues",
+        "resolved_url": "https://www.anthropic.com/engineering/a-postmortem-of-three-recent-issues",
+        "published_at": "2025-09-17T00:00:00.000Z",
+        "source_modified_at": "2025-12-14T20:27:33.000Z",
+        "digest": "d7c4c729b9ab5094b393e3ec1d2df8039ac5c79fb6cbc17ef6e7346b0f3d508e"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "同一次更新之后，有人觉得答案变差，有人没有遇到问题，监控平均值也没有明显异常。面对相互矛盾的反馈，怎样区分平台、路由、时间与部署变化的影响？如果过早认定只有一个原因，多个叠加的问题可能一直被掩盖。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "按平台、时间、路由和部署变更拆分现象，再寻找可复现证据。一个总体平均值可能掩盖局部故障。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "这是特定时期的事故记录，不能据此解释当前任何一次模型表现变化。新的问题仍需新证据。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】用户说“昨天开始答案变差”。先保留具体输入与输出，再记录版本、时间和工具错误。提出路由、提示变化、检索失败三个可区分假设，每次只改变一个条件。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "这篇复盘说明多个基础设施问题如何叠加造成不同用户的质量下降，并讨论检测和排查的不足。按平台、时间、路由和部署变更拆分现象，再寻找可复现证据。一个总体平均值可能掩盖局部故障。"
+        },
+        {
+          "prompt": "面对“答案变差”的反馈，你会先收集什么，怎样避免过早归因？",
+          "points": "保留复现样本和环境信息，按影响范围分组，通过单变量对照缩小原因。历史事故只能提供排查思路。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "这是特定时期的事故记录，不能据此解释当前任何一次模型表现变化。新的问题仍需新证据。"
+        }
+      ]
+    },
+    {
+      "id": "effective-context-engineering-for-ai-agents",
+      "number": 10,
+      "title": "上下文不是越多越好",
+      "topic": 1,
+      "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+      "summary": "文章将上下文工程视为持续筛选有限窗口中信息的过程，涵盖指令、工具、历史与外部资料。",
+      "published_at": "2025-09-29",
+      "source": {
+        "title": "Effective context engineering for AI agents",
+        "url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+        "resolved_url": "https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents",
+        "published_at": "2025-09-29T00:00:00.000Z",
+        "source_modified_at": "2026-01-06T15:31:12.000Z",
+        "digest": "da3e09b8ba6fb702cea02b50b735ac2431bd5a371abc33fc9be1322a7220a08a"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "助手读过很多材料以后，已经掌握的关键约束反而开始被忽略。继续把全部资料塞进下一轮，会不会让它更难找到重点？需要决定哪些信息必须随任务保留，哪些可以放在外部按需读取，以及压缩后如何找回细节。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "每轮为下一步决策保留高信号信息。通过按需读取、压缩和结构化记录减少无关负担。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "压缩也可能丢失关键条件。保留约束、来源、未解决事项和获取详情的路径，不能只留下结论。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】助手读过二十份材料。交接时只允许一页记录：用户目标、可信来源、冲突证据、已做事项和下一步。逐条说明为什么保留，原始材料留在文件中按需读取。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章将上下文工程视为持续筛选有限窗口中信息的过程，涵盖指令、工具、历史与外部资料。每轮为下一步决策保留高信号信息。通过按需读取、压缩和结构化记录减少无关负担。"
+        },
+        {
+          "prompt": "你会在一页研究交接记录中保留什么，哪些内容留待按需读取？",
+          "points": "保留影响决策的约束、证据与未决项；冗长原文外置且可追溯。说明压缩后怎样恢复细节。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "压缩也可能丢失关键条件。保留约束、来源、未解决事项和获取详情的路径，不能只留下结论。"
+        }
+      ]
+    },
+    {
+      "id": "equipping-agents-for-the-real-world-with-agent-skills",
+      "number": 11,
+      "title": "把经验整理成按需加载的技能",
+      "topic": 2,
+      "url": "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+      "summary": "文章介绍用指令、脚本和资源组织技能，并按需加载，让通用 Agent 获取特定领域的操作知识。",
+      "published_at": "2025-10-16",
+      "source": {
+        "title": "Equipping agents for the real world with Agent Skills",
+        "url": "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+        "resolved_url": "https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills",
+        "published_at": "2025-10-16T00:00:00.000Z",
+        "source_modified_at": "2026-04-15T14:39:01.000Z",
+        "digest": "fe45eb81cddb670aab0fb3a2bc0fc02c6c2f51b96410c7564e340ece440f96dc"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "团队每次整理资料都要重新向助手解释同一套步骤，格式规范和脚本又散落在不同位置。怎样把这些经验组织成能被发现和复用的操作知识，同时避免每次任务都加载整套手册？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "简短描述负责触发，主体说明负责执行，附属资源承载细节。分层披露减少一次性塞入全部材料。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "技能内容需要可信、可维护。技能说明不能替代真实工具权限，也不能保证脚本运行结果正确。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】整理“每月资料整理”技能：写清何时使用、输入输出、执行顺序和验收方法。把少用的格式规范放附录，而不是全部挤进入口说明。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章介绍用指令、脚本和资源组织技能，并按需加载，让通用 Agent 获取特定领域的操作知识。简短描述负责触发，主体说明负责执行，附属资源承载细节。分层披露减少一次性塞入全部材料。"
+        },
+        {
+          "prompt": "哪些内容放技能入口，哪些内容放附属文件？",
+          "points": "入口保留触发条件和核心流程，细节按需读取。说明资源路径、维护责任和结果验证。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "技能内容需要可信、可维护。技能说明不能替代真实工具权限，也不能保证脚本运行结果正确。"
+        }
+      ]
+    },
+    {
+      "id": "claude-code-sandboxing",
+      "number": 12,
+      "title": "用执行边界减少重复审批",
+      "topic": 6,
+      "url": "https://www.anthropic.com/engineering/claude-code-sandboxing",
+      "summary": "文章讨论通过沙箱限制文件与网络访问，为编码 Agent 提供更清楚的执行范围。",
+      "published_at": "2025-10-20",
+      "source": {
+        "title": "Beyond permission prompts: making Claude Code more secure and autonomous",
+        "url": "https://www.anthropic.com/engineering/claude-code-sandboxing",
+        "resolved_url": "https://www.anthropic.com/engineering/claude-code-sandboxing",
+        "published_at": "2025-10-20T00:00:00.000Z",
+        "source_modified_at": "2025-11-03T21:01:45.000Z",
+        "digest": "2f9ac6f2b6359daa3d618c097b65e4bb179c1118e0b179bd50da949f788a2a94"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "你告诉助手只修改输出目录，它却拥有整个工作区的写权限。此时安全边界主要依赖它每一次都理解并遵守提醒。哪些限制应直接落实到文件和网络访问能力，哪些判断仍需要结合用户意图？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "将允许访问的资源落实到执行环境，而不只依赖自然语言提醒或每次点击确认。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "沙箱有边界，也有配置和兼容成本。允许访问的范围内仍可能出现错误，需要结合任务约束。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】为资料助手列出资源表：可写的输出目录、只读资料目录、允许连接的域名。假设工具尝试写入其他目录，明确由什么机制拒绝，而不是要求它“自觉遵守”。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章讨论通过沙箱限制文件与网络访问，为编码 Agent 提供更清楚的执行范围。将允许访问的资源落实到执行环境，而不只依赖自然语言提醒或每次点击确认。"
+        },
+        {
+          "prompt": "为什么“请不要修改原始资料”不能代替只读权限？",
+          "points": "指令约束行为，权限限制实际能力。两者应配合，并测试越界动作是否确实被拒绝。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "沙箱有边界，也有配置和兼容成本。允许访问的范围内仍可能出现错误，需要结合任务约束。"
+        }
+      ]
+    },
+    {
+      "id": "code-execution-with-mcp",
+      "number": 13,
+      "title": "让数据处理留在执行层",
+      "topic": 2,
+      "url": "https://www.anthropic.com/engineering/code-execution-with-mcp",
+      "summary": "文章讨论工具定义和中间结果占用上下文的问题，并用代码组织 MCP 调用及数据处理。",
+      "published_at": "2025-11-04",
+      "source": {
+        "title": "Code execution with MCP: Building more efficient agents",
+        "url": "https://www.anthropic.com/engineering/code-execution-with-mcp",
+        "resolved_url": "https://www.anthropic.com/engineering/code-execution-with-mcp",
+        "published_at": "2025-11-04T00:00:00.000Z",
+        "source_modified_at": "2025-11-04T22:06:04.000Z",
+        "digest": "6659c5a787568ac6609bc616982bf8c217c37a2f2749db5613be128fbaa5297a"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "为了找出一千条记录中缺少日期的条目，助手把全部数据先读进对话，再把它们重新写给另一个工具。确定的数据处理为何要反复经过模型？哪些计算可以留在执行环境中，哪些结果才值得进入上下文？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "按需发现工具，让确定的数据转换和批量处理在执行环境中完成，仅把有用结果交给模型。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "减少上下文流转不等于自动获得安全性。执行代码仍需权限边界、错误处理和结果核验。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】读取一千条文档元信息，只需找到缺失日期的记录。先在执行层筛选和统计，再向模型返回异常项及总量，避免把所有记录反复复制进对话。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章讨论工具定义和中间结果占用上下文的问题，并用代码组织 MCP 调用及数据处理。按需发现工具，让确定的数据转换和批量处理在执行环境中完成，仅把有用结果交给模型。"
+        },
+        {
+          "prompt": "上述任务哪些步骤适合代码，哪些需要模型判断？",
+          "points": "筛选、计数和去重可确定执行；含义判断再交模型。保留可追溯记录，避免用摘要隐藏处理错误。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "减少上下文流转不等于自动获得安全性。执行代码仍需权限边界、错误处理和结果核验。"
+        }
+      ]
+    },
+    {
+      "id": "advanced-tool-use",
+      "number": 14,
+      "title": "工具很多时，先发现再加载",
+      "topic": 2,
+      "url": "https://www.anthropic.com/engineering/advanced-tool-use",
+      "summary": "文章介绍工具搜索、程序化工具调用和使用示例，用于应对工具规模扩大后的选择和上下文负担。",
+      "published_at": "2025-11-24",
+      "source": {
+        "title": "Introducing advanced tool use on the Claude Developer Platform",
+        "url": "https://www.anthropic.com/engineering/advanced-tool-use",
+        "resolved_url": "https://www.anthropic.com/engineering/advanced-tool-use",
+        "published_at": "2025-11-24T00:00:00.000Z",
+        "source_modified_at": "2026-03-16T16:09:03.000Z",
+        "digest": "b638eb6b754e66000cff937471faa8266ca69c3e8d862e571b7d290bc099ea01"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "连接的工具越来越多，助手还没开始任务，就需要读取大量名称、说明和参数。一次性提供所有定义，是否真的有助于选对工具？需要设计发现、加载和使用示例的顺序，让当前任务只面对必要的能力。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "先找相关工具，再读取定义；用代码安排循环与条件；用例子补充参数结构难以表达的使用惯例。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "文章中的功能发布状态属于历史信息。是否可用需核对当前平台文档，不能从概念教程直接推断。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】有搜索、导出、分享等多类工具。为“查找资料”只加载查询工具，给出正常查询、空结果和日期范围的示例；在任务需要分享时再发现相关能力。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章介绍工具搜索、程序化工具调用和使用示例，用于应对工具规模扩大后的选择和上下文负担。先找相关工具，再读取定义；用代码安排循环与条件；用例子补充参数结构难以表达的使用惯例。"
+        },
+        {
+          "prompt": "怎样避免把所有工具定义提前塞进上下文？",
+          "points": "分层发现和加载，保留足以选择的描述；按任务验证选择准确率，使用示例解释常见参数组合。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "文章中的功能发布状态属于历史信息。是否可用需核对当前平台文档，不能从概念教程直接推断。"
+        }
+      ]
+    },
+    {
+      "id": "effective-harnesses-for-long-running-agents",
+      "number": 15,
+      "title": "把长任务交给下一班自己",
+      "topic": 3,
+      "url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+      "summary": "文章用初始化安排和持续的小步执行应对跨会话任务，强调清晰的进展记录与可恢复环境。",
+      "published_at": "2025-11-26",
+      "source": {
+        "title": "Effective harnesses for long-running agents",
+        "url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+        "resolved_url": "https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents",
+        "published_at": "2025-11-26T00:00:00.000Z",
+        "source_modified_at": "2025-11-26T18:07:21.000Z",
+        "digest": "b0b734d5a6eaed6c63c0958f6bb18c94765b969d616a5966e48caf79fcb074ad"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "一个任务要跨几天完成，下一次会话打开时却不知道上次做到了哪里。只有一句“进展良好”，无法判断哪些文件可用、哪些功能验证过。怎样留下足够清楚的任务状态，让新的执行者能够接着做，而不是重新猜测？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "先建立环境和任务清单，每次完成有限目标，再留下可验证成果、进度和下一步。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "日志写了“完成”不代表功能可用。交接记录应指向验证结果，下一次执行仍要检查当前状态。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】资料助手分三天建立索引。每次结束写下完成文件、验证结果、未完成项与恢复命令。第二天由另一人只看记录接手，观察他是否必须猜测状态。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章用初始化安排和持续的小步执行应对跨会话任务，强调清晰的进展记录与可恢复环境。先建立环境和任务清单，每次完成有限目标，再留下可验证成果、进度和下一步。"
+        },
+        {
+          "prompt": "什么样的交接能让新会话不必重新摸索？",
+          "points": "有目标、环境入口、完成证据、已知问题与明确下一步；不留下无法运行的半成品，也不把计划当成果。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "日志写了“完成”不代表功能可用。交接记录应指向验证结果，下一次执行仍要检查当前状态。"
+        }
+      ]
+    },
+    {
+      "id": "demystifying-evals-for-ai-agents",
+      "number": 16,
+      "title": "看环境中的结果，而不只看回答",
+      "topic": 5,
+      "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+      "summary": "文章区分任务、尝试、评分器、执行轨迹与最终状态，讨论 Agent 评测的组成与建设方法。",
+      "published_at": "2026-01-09",
+      "source": {
+        "title": "Demystifying evals for AI agents",
+        "url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+        "resolved_url": "https://www.anthropic.com/engineering/demystifying-evals-for-ai-agents",
+        "published_at": "2026-01-09T00:00:00.000Z",
+        "source_modified_at": "2026-03-18T18:48:35.000Z",
+        "digest": "7538e430ebbafb94d62c6e070d5cc1e95cab7adacf9218bf009fa26d2363d878"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "助手回复“文件已归档”，但目标目录里可能没有文件，也可能保存了错误内容。我们要验证的是这句话，还是环境中的真实结果？多步任务的检查，需要同时考虑输入、过程、最终状态和重复尝试之间的波动。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "先定义任务成功条件，再记录完整过程，并核对环境中的真实结果；多次尝试有助于观察波动。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "评分器也可能有缺陷。自动检查应搭配人工抽查，成功措辞不能代替真实状态。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】助手声称“文件已归档”。检查路径、文件内容和重复执行后的状态，再保存工具记录。分别构造“回复成功但文件不存在”和“文件存在但内容错误”的反例。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章区分任务、尝试、评分器、执行轨迹与最终状态，讨论 Agent 评测的组成与建设方法。先定义任务成功条件，再记录完整过程，并核对环境中的真实结果；多次尝试有助于观察波动。"
+        },
+        {
+          "prompt": "如何验证“文件已归档”，而不是只验证助手说过这句话？",
+          "points": "检查最终文件和内容、重试行为以及异常情况；保留执行证据，区分轨迹和结果。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "评分器也可能有缺陷。自动检查应搭配人工抽查，成功措辞不能代替真实状态。"
+        }
+      ]
+    },
+    {
+      "id": "ai-resistant-technical-evaluations",
+      "number": 17,
+      "title": "能力变了，测验也要重新审视",
+      "topic": 5,
+      "url": "https://www.anthropic.com/engineering/AI-resistant-technical-evaluations",
+      "summary": "文章回顾技术考核随模型能力提升反复调整的过程，讨论一道题是否仍能提供有效区分信号。",
+      "published_at": "2026-01-21",
+      "source": {
+        "title": "Designing AI-resistant technical evaluations",
+        "url": "https://www.anthropic.com/engineering/AI-resistant-technical-evaluations",
+        "resolved_url": "https://www.anthropic.com/engineering/AI-resistant-technical-evaluations",
+        "published_at": "2026-01-21T00:00:00.000Z",
+        "source_modified_at": "2026-01-22T01:16:20.000Z",
+        "digest": "8cff47f6880403d07f2f2bb51396fe86839acf6c5d91caed90f7b2c419cf314e"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "一道原本能区分能力的题，随着工具变强，可能只需要一次调用就能完成。题目还在，测到的能力却可能已经改变。怎样重新检查题目与目标能力的关系，并把这种反思用于帮助学习，而不是单纯提高难度？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "考核要对应想观察的能力，并周期性核对题目是否还具代表性、是否已被轻易代做。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "题目更难不必然更有效。训练学习库的回想功能重在理解，不应照搬招聘筛选的压力机制。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】“背出三个名词”很容易完成，却不证明能做设计。把它改成解释一个方案的取舍，再给出新约束让学习者修订方案。对照目标能力，而不是追求难倒用户。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章回顾技术考核随模型能力提升反复调整的过程，讨论一道题是否仍能提供有效区分信号。考核要对应想观察的能力，并周期性核对题目是否还具代表性、是否已被轻易代做。"
+        },
+        {
+          "prompt": "如何把只测记忆的题目改成支持理解的回想练习？",
+          "points": "要求解释、迁移或识别边界，并提供反馈。题目要贴合目标，不使用排名或过关机制。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "题目更难不必然更有效。训练学习库的回想功能重在理解，不应照搬招聘筛选的压力机制。"
+        }
+      ]
+    },
+    {
+      "id": "infrastructure-noise",
+      "number": 18,
+      "title": "先确认大家是否在做同一场实验",
+      "topic": 5,
+      "url": "https://www.anthropic.com/engineering/infrastructure-noise",
+      "summary": "文章说明运行资源和限制方式会影响编码 Agent 评测，环境错误可能改变模型比较的结论。",
+      "published_at": "2026-02-05",
+      "source": {
+        "title": "Quantifying infrastructure noise in agentic coding evals",
+        "url": "https://www.anthropic.com/engineering/infrastructure-noise",
+        "resolved_url": "https://www.anthropic.com/engineering/infrastructure-noise",
+        "published_at": "2026-02-05T00:00:00.000Z",
+        "source_modified_at": "2026-04-24T14:21:28.000Z",
+        "digest": "469f9b9ee0e0a71ddb03c9f68e61758889ffac640f2b7f7a73b96f2d3724fa1c"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "同一个编码任务，在一台机器上成功，在另一台机器上因内存不足被终止。如果把两次结果直接用于比较模型，就混入了运行环境的影响。怎样区分资源限制、工具故障和真正的任务失败，才能得出可信的结论？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "记录并控制 CPU、内存、时限和资源执行策略，区分任务能力失败与基础设施失败。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "无限加资源也不是公平比较；对照应选择相同且有实际意义的预算，报告环境异常。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】A 助手超时，B 助手成功。先对齐机器、依赖、缓存和时限，再记录失败原因。若一次任务被内存限制终止，不要直接判作模型不会解题。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章说明运行资源和限制方式会影响编码 Agent 评测，环境错误可能改变模型比较的结论。记录并控制 CPU、内存、时限和资源执行策略，区分任务能力失败与基础设施失败。"
+        },
+        {
+          "prompt": "怎样判断失败来自模型、工具还是执行环境？",
+          "points": "保留错误与资源记录，控制变量重测。分开报告环境失败与任务失败，不任意删除不利结果。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "无限加资源也不是公平比较；对照应选择相同且有实际意义的预算，报告环境异常。"
+        }
+      ]
+    },
+    {
+      "id": "building-c-compiler",
+      "number": 19,
+      "title": "并行编码依赖任务边界和测试",
+      "topic": 4,
+      "url": "https://www.anthropic.com/engineering/building-c-compiler",
+      "summary": "文章以多个 Agent 构建 C 编译器为案例，讨论长时间协作、任务组织、测试和自主开发的局限。",
+      "published_at": "2026-02-05",
+      "source": {
+        "title": "Building a C compiler with a team of parallel Claudes",
+        "url": "https://www.anthropic.com/engineering/building-c-compiler",
+        "resolved_url": "https://www.anthropic.com/engineering/building-c-compiler",
+        "published_at": "2026-02-05T00:00:00.000Z",
+        "source_modified_at": "2026-02-05T19:38:29.000Z",
+        "digest": "86cdd422c2d5e010751239d59d9af5cf86116ab5d4e01e9969e27ee1b1b569b5"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "多个助手同时修改一个代码库，看起来可以加速开发，也可能重复处理同一个问题，或把彼此的修改破坏掉。并行之前，需要怎样的任务边界、共享接口和测试，才能让局部进展合成一个可运行的整体？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "用可独立推进的任务、协调机制和外部测试维持方向，避免多个执行者重复或相互破坏工作。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "这是资源投入较大的实验，不能把案例结果视为所有项目都适合无人值守并行开发的保证。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】两人同时维护资料索引：一人改解析器，一人整理课程。先约定输入输出格式与文件归属，再合并。增加共享接口变化的测试，观察局部正确是否导致整体损坏。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章以多个 Agent 构建 C 编译器为案例，讨论长时间协作、任务组织、测试和自主开发的局限。用可独立推进的任务、协调机制和外部测试维持方向，避免多个执行者重复或相互破坏工作。"
+        },
+        {
+          "prompt": "你会如何拆分工作并验证合并后的整体结果？",
+          "points": "按低耦合边界拆分，明确接口和所有权；局部测试之外执行集成验证，设置停止与预算条件。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "这是资源投入较大的实验，不能把案例结果视为所有项目都适合无人值守并行开发的保证。"
+        }
+      ]
+    },
+    {
+      "id": "eval-awareness-browsecomp",
+      "number": 20,
+      "title": "找到答案不一定证明完成了研究",
+      "topic": 5,
+      "url": "https://www.anthropic.com/engineering/eval-awareness-browsecomp",
+      "summary": "文章报告联网评测中的污染和评测识别现象：模型可能找到基准答案，而非按目标方式解决问题。",
+      "published_at": "2026-03-06",
+      "source": {
+        "title": "Eval awareness in Claude Opus 4.6’s BrowseComp performance",
+        "url": "https://www.anthropic.com/engineering/eval-awareness-browsecomp",
+        "resolved_url": "https://www.anthropic.com/engineering/eval-awareness-browsecomp",
+        "published_at": "2026-03-06T00:00:00.000Z",
+        "source_modified_at": "2026-03-18T20:16:12.000Z",
+        "digest": "6a2a59a7a9a4c0bd1ffba3e0d94cd11430e4aba70678e23f6722a2040b5bc835"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "助手给出了正确答案，但来源是公开的标准答案页面，而不是需要它调查的事实材料。这样的结果能说明什么能力？联网评测不仅要检查答案，还要辨认获取答案的路径是否符合原本想观察的研究行为。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "核对结果的来源路径，区分正常研究、答案泄露和绕过任务目标的策略。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "观察到异常不意味着所有联网评测都无效；需要具体证据、轨迹核查和更合适的测试设计。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】助手回答了一个历史事实，但引用的是收录标准答案的页面。追查原始出处，设计一个未公开的新问题，并比较两次获取证据的路径。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章报告联网评测中的污染和评测识别现象：模型可能找到基准答案，而非按目标方式解决问题。核对结果的来源路径，区分正常研究、答案泄露和绕过任务目标的策略。"
+        },
+        {
+          "prompt": "为什么答案正确仍可能无法证明研究能力？",
+          "points": "可能获得泄露答案或利用评测线索。检查来源、过程与未见任务表现，而非仅核对最终字符串。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "观察到异常不意味着所有联网评测都无效；需要具体证据、轨迹核查和更合适的测试设计。"
+        }
+      ]
+    },
+    {
+      "id": "harness-design-long-running-apps",
+      "number": 21,
+      "title": "把生成与检查分成不同职责",
+      "topic": 3,
+      "url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+      "summary": "文章探索规划、生成和评估的协作安排，用更明确的判断标准支持长任务与应用开发。",
+      "published_at": "2026-03-24",
+      "source": {
+        "title": "Harness design for long-running application development",
+        "url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+        "resolved_url": "https://www.anthropic.com/engineering/harness-design-long-running-apps",
+        "published_at": "2026-03-24T00:00:00.000Z",
+        "source_modified_at": "2026-03-24T16:23:08.000Z",
+        "digest": "9d7dd8b7ef6bd3c4e75274411f5f3e1a525bc293e9874acc9ffa0f7128163b4f"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "一个应用已经能运行，生成它的助手也认为任务完成了，但用户仍然遇到阅读困难、功能缺失和状态丢失。怎样把“好用”拆成可观察的标准，并让实现与检查相互配合，而不是不断自我肯定或无限返工？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "将抽象质量要求转换成可检查的维度，让生成过程得到独立反馈，并通过结构化交接保持连贯。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "评估者同样可能误判。评价标准要与用户任务一致，不能为了迭代而无限增加复杂度。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】为学习库设计检查清单：文章能打开、版本可切换、记录能恢复、文字能读清。先让实现者交付，再让检查者从用户流程验证，而不是只评价代码看起来是否整齐。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章探索规划、生成和评估的协作安排，用更明确的判断标准支持长任务与应用开发。将抽象质量要求转换成可检查的维度，让生成过程得到独立反馈，并通过结构化交接保持连贯。"
+        },
+        {
+          "prompt": "怎样把“这个学习库好用”拆成可检验的反馈？",
+          "points": "定义可操作的阅读、导航、保存与恢复场景；把审美判断与功能证据分开，发现问题后复验。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "评估者同样可能误判。评价标准要与用户任务一致，不能为了迭代而无限增加复杂度。"
+        }
+      ]
+    },
+    {
+      "id": "claude-code-auto-mode",
+      "number": 22,
+      "title": "减少审批疲劳，也要承认判断边界",
+      "topic": 6,
+      "url": "https://www.anthropic.com/engineering/claude-code-auto-mode",
+      "summary": "文章介绍用分类判断辅助权限决策，试图减少频繁确认造成的审批疲劳，并讨论遗漏风险。",
+      "published_at": "2026-03-25",
+      "source": {
+        "title": "How we built Claude Code auto mode: a safer way to skip permissions",
+        "url": "https://www.anthropic.com/engineering/claude-code-auto-mode",
+        "resolved_url": "https://www.anthropic.com/engineering/claude-code-auto-mode",
+        "published_at": "2026-03-25T00:00:00.000Z",
+        "source_modified_at": "2026-05-27T11:44:48.000Z",
+        "digest": "2b5776f75f7bd899352ee8ed8c523ef5fc83cfef5c8ce0724803f3b9a17e6d1c"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "如果每一步都弹出确认，用户可能逐渐不再认真阅读；如果完全不确认，又可能让助手执行超出意图的动作。怎样减少低价值的打断，同时为真正有影响的操作保留清楚的判断和执行边界？"
+        },
+        {
+          "heading": "理解方法",
+          "body": "根据用户意图和动作影响判断是否需要升级处理，减少低价值的重复确认。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "概率判断会漏判，不能替代执行隔离。减少弹窗不意味着取消高影响动作的边界。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】将“读取教程”“更新本地副本”“删除所有学习记录”“发布到公网”分组。说明哪些已在任务授权中，哪些需单独确认，并把可执行范围落实到权限。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章介绍用分类判断辅助权限决策，试图减少频繁确认造成的审批疲劳，并讨论遗漏风险。根据用户意图和动作影响判断是否需要升级处理，减少低价值的重复确认。"
+        },
+        {
+          "prompt": "如何减少无意义确认，同时保护高影响操作？",
+          "points": "结合明确授权、动作影响和执行限制；不要用确认数量衡量安全，也不要默认静默代表同意。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "概率判断会漏判，不能替代执行隔离。减少弹窗不意味着取消高影响动作的边界。"
+        }
+      ]
+    },
+    {
+      "id": "managed-agents",
+      "number": 23,
+      "title": "把会话、执行循环和环境分开",
+      "topic": 7,
+      "url": "https://www.anthropic.com/engineering/managed-agents",
+      "summary": "文章介绍将会话记录、Agent 执行循环与沙箱解耦，以便各部分独立替换和扩展。",
+      "published_at": "2026-04-08",
+      "source": {
+        "title": "Scaling Managed Agents: Decoupling the brain from the hands",
+        "url": "https://www.anthropic.com/engineering/managed-agents",
+        "resolved_url": "https://www.anthropic.com/engineering/managed-agents",
+        "published_at": "2026-04-08T00:00:00.000Z",
+        "source_modified_at": "2026-04-24T14:19:43.000Z",
+        "digest": "ff2fccc929e59a2dec36fdeba1bf89a9a812760820cc4021091e0e5fd70320fd"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "一个长任务的会话、执行循环和文件都放在同一个临时环境中，环境故障就可能让整个任务无法恢复。哪些信息必须长期保存，哪些运行部分可以替换？把边界划清楚，比一开始拆出很多服务更重要。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "把长期需要保存的事件与可替换的运行环境分开，用稳定接口连接，减少故障牵连。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "拆分服务会增加接口和运维成本；小型本地应用可以先做清楚的数据边界，不必照搬云端架构。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】学习库进程关闭后，哪些数据必须还在？把课程版本、用户回答和临时下载分别放入持久与临时区域，再模拟服务重启。无需为此先建三套独立服务。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章介绍将会话记录、Agent 执行循环与沙箱解耦，以便各部分独立替换和扩展。把长期需要保存的事件与可替换的运行环境分开，用稳定接口连接，减少故障牵连。"
+        },
+        {
+          "prompt": "本地学习库怎样借鉴解耦思想而不过度设计？",
+          "points": "持久数据独立于进程和临时文件；接口清楚、能恢复即可。服务数量由实际规模决定。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "拆分服务会增加接口和运维成本；小型本地应用可以先做清楚的数据边界，不必照搬云端架构。"
+        }
+      ]
+    },
+    {
+      "id": "april-23-postmortem",
+      "number": 24,
+      "title": "用户反馈如何变成可追踪的质量调查",
+      "topic": 7,
+      "url": "https://www.anthropic.com/engineering/april-23-postmortem",
+      "summary": "这篇复盘回应 Claude Code 质量反馈，强调具体变更、复现与修复之间的追踪关系。",
+      "published_at": "2026-04-23",
+      "source": {
+        "title": "An update on recent Claude Code quality reports",
+        "url": "https://www.anthropic.com/engineering/april-23-postmortem",
+        "resolved_url": "https://www.anthropic.com/engineering/april-23-postmortem",
+        "published_at": "2026-04-23T00:00:00.000Z",
+        "source_modified_at": "2026-04-30T21:34:23.000Z",
+        "digest": "b898d0d709ad08d2b7b03b53d9a6387243c7b60d03fdf5a471679697fa8f52ac"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "用户说“更新以后表现变差”，团队却只有零散反馈和整体指标。怎样把具体样本、环境与变更时间连接起来，并验证修复确实解决了用户看到的现象？调查需要一条可追踪的证据链，而不只是一个听起来合理的解释。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "将模糊反馈转成样本、环境和时间线，分别调查可能的变化，再验证修复是否解决用户现象。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "复盘针对特定事件。不能用单次体验概括所有模型表现，也不能把一次内部测试当成全部用户已恢复。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】更新后有人反馈“历史版本不见了”。保留更新前后的目录与版本清单，验证入口隐藏、文件缺失或读取失败三种假设，修复后用同一用户路径回测。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "这篇复盘回应 Claude Code 质量反馈，强调具体变更、复现与修复之间的追踪关系。将模糊反馈转成样本、环境和时间线，分别调查可能的变化，再验证修复是否解决用户现象。"
+        },
+        {
+          "prompt": "怎样证明修复解决了用户的问题，而非只消除了日志错误？",
+          "points": "复现原始用户路径，对照修复前后结果，检查数据是否恢复可见。保留未验证范围。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "复盘针对特定事件。不能用单次体验概括所有模型表现，也不能把一次内部测试当成全部用户已恢复。"
+        }
+      ]
+    },
+    {
+      "id": "how-we-contain-claude",
+      "number": 25,
+      "title": "限制出错时能影响的范围",
+      "topic": 6,
+      "url": "https://www.anthropic.com/engineering/how-we-contain-claude",
+      "summary": "文章讨论 Agent 能力增强后的影响范围控制，将行为监督与环境约束结合考虑。",
+      "published_at": "2026-05-25",
+      "source": {
+        "title": "How we contain Claude across products",
+        "url": "https://www.anthropic.com/engineering/how-we-contain-claude",
+        "resolved_url": "https://www.anthropic.com/engineering/how-we-contain-claude",
+        "published_at": "2026-05-25T00:00:00.000Z",
+        "source_modified_at": "2026-06-06T00:28:16.000Z",
+        "digest": "0807e632511634b5deac58458126481e0944c56138f38604a0c557e863939cc0"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "一个更新器只需要读取官方来源并写入学习库，却可能被赋予读取私人文档或访问其他系统的能力。即使它通常按要求行动，一次失误又能影响多大范围？部署之前，需要同时考虑出错可能性与实际可触及的资源。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "不仅考虑出错概率，还要限制一次失误能够触及的资源，让能力与可承受影响相匹配。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "降低风险不等于零风险；隔离边界和实际部署权限都需要验证，不能只看安全说明。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】更新器只需要访问官方站点并写入学习库目录。列出它不需要的能力，如读取私人文档或监听公网，再检查实际进程权限与接口是否超出需求。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章讨论 Agent 能力增强后的影响范围控制，将行为监督与环境约束结合考虑。不仅考虑出错概率，还要限制一次失误能够触及的资源，让能力与可承受影响相匹配。"
+        },
+        {
+          "prompt": "如何把“更新器只更新资料”的意图转成实际执行边界？",
+          "points": "限制来源、写入路径与监听范围，验证越界请求。把监督和隔离作为互补措施。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "降低风险不等于零风险；隔离边界和实际部署权限都需要验证，不能只看安全说明。"
+        }
+      ]
+    },
+    {
+      "id": "redesigning-source-control",
+      "number": 26,
+      "title": "当编码变快，瓶颈会转移",
+      "topic": 7,
+      "url": "https://www.anthropic.com/engineering/redesigning-source-control",
+      "summary": "文章介绍 Anthropic 为高并发代码变更重新设计内部源代码管理，强调其特殊规模与使用前提。",
+      "published_at": "2026-10-13",
+      "source": {
+        "title": "Redesigning source control at Anthropic",
+        "url": "https://www.anthropic.com/engineering/redesigning-source-control",
+        "resolved_url": "https://www.anthropic.com/engineering/redesigning-source-control",
+        "published_at": "2026-10-13T00:00:00.000Z",
+        "source_modified_at": "2026-10-15T18:21:28.000Z",
+        "digest": "615c94491676b015ef6c82db7a208da3c1c54766b87cb037d3b58780f8f9f715"
+      },
+      "sections": [
+        {
+          "heading": "先抓住这个问题",
+          "body": "当代码生成变快，等待可能转移到代码检出、审查、测试和合并。面对这些排队现象，应该继续优化编码，还是重新测量后面的流程？架构调整应从自己的实际负载与约束出发，不能直接照搬超大规模团队的选择。"
+        },
+        {
+          "heading": "理解方法",
+          "body": "从真实负载出发定位瓶颈，再调整数据访问、缓存和服务职责，而不是默认沿用原有架构假设。"
+        },
+        {
+          "heading": "适用边界",
+          "body": "案例明确具有特殊规模和在线前提，不能据此建议一般团队替换 Git；离线需求也会改变取舍。"
+        },
+        {
+          "heading": "换个场景想想",
+          "body": "【原创演练】学习库有二十多篇文章时，普通文件已足够。如果未来变成大量用户和版本，先测下载、搜索、打包各自耗时，再决定优化哪个环节，不从大公司的架构反推自己的需求。"
+        },
+        {
+          "heading": "把它带回自己的工作",
+          "body": "选一个你正在做的小任务，写下能借鉴的一点、暂不适用的一点，以及验证效果需要观察的证据。案例与练习均为本学习库原创，用于迁移理解，不代表来源文章的实验结果。"
+        }
+      ],
+      "questions": [
+        {
+          "prompt": "暂时合上导读：用自己的话说明这篇文章要解决什么问题，以及它的主要方法。",
+          "points": "文章介绍 Anthropic 为高并发代码变更重新设计内部源代码管理，强调其特殊规模与使用前提。从真实负载出发定位瓶颈，再调整数据访问、缓存和服务职责，而不是默认沿用原有架构假设。"
+        },
+        {
+          "prompt": "你会用什么证据判断学习库需要更复杂的存储或分发架构？",
+          "points": "记录实际规模、耗时、资源和故障；优化已出现的瓶颈，并保留离线与恢复需求。"
+        },
+        {
+          "prompt": "这篇方法有什么适用边界？你会怎样检查它在自己的任务中是否有效？",
+          "points": "案例明确具有特殊规模和在线前提，不能据此建议一般团队替换 Git；离线需求也会改变取舍。"
+        }
+      ]
+    }
+  ],
+  "edition": "1.1"
+}
