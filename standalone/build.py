@@ -36,6 +36,7 @@ js=js[:a]+'''async function updates(){current=null;globalNavigation('reading');$
 js=js.replace('导入前备份已保存在本机。','导入前备份已发起下载，请确认浏览器已保存。')
 js=js.replace('草稿已保存在本机',"草稿已暂存（请定期导出备份）")
 html=(ROOT/'web/index.html').read_text().replace('<link rel="stylesheet" href="style.css">','<style>'+(ROOT/'web/style.css').read_text()+'</style>').replace('<script src="app.js" defer></script>','')
+html=html.replace('href="icon.png"', 'href="data:image/png;base64,'+base64.b64encode((ROOT/'web/icon.png').read_bytes()).decode()+'"')
 html=html.replace('<div class="layout">','<p id="storage-notice" class="tiny muted" style="max-width:1100px;margin:16px auto;padding:0 24px">独立 HTML v'+version+' · 记录由浏览器暂存，请在“我的思考”定期导出；换版本时导入备份。</p><div class="layout">')
 html=html.replace('<a href="guide.html">使用说明与术语表</a>','<a href="#updates">版本与使用说明</a>')
 payload=json.dumps(data,ensure_ascii=False).replace('<','\\u003c')

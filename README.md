@@ -6,8 +6,8 @@
 
 | 版本 | 下载 | 使用方式 |
 |---|---|---|
-| 独立 HTML 2.0.2 | [HTML Release](https://github.com/AlexUoU/engineering-library/releases/tag/html-v2.0.2) | 下载 HTML，在浏览器打开，无需 Python 或本地服务 |
-| macOS App 2.0.3 | [App Release](https://github.com/AlexUoU/engineering-library/releases/tag/app-v2.0.3) | 完整解压 ZIP，双击工程实践.app；后台运行服务并打开浏览器 |
+| 独立 HTML 2.0.4 | [HTML Release](https://github.com/AlexUoU/engineering-library/releases/tag/html-v2.0.4) | 下载 HTML，在浏览器打开，无需 Python 或本地服务 |
+| macOS App 2.0.5 | [App Release](https://github.com/AlexUoU/engineering-library/releases/tag/app-v2.0.5) | 完整解压 ZIP，双击工程实践.app；后台运行服务并打开浏览器 |
 
 App 是后台启动器，不是独立阅读窗口。支持 Apple Silicon / Intel 原生入口，需要兼容的 Python 3.9+；未公证，首次打开可能触发 macOS 安全提示。双击停止工程实践.app 可结束服务。Windows/Linux 启动脚本仍需保留终端，未实机验收。
 
@@ -29,9 +29,9 @@ Python 标准库即可运行 `python3 server.py --no-check`。源码初始内容
 
 ## 验证范围
 
-App 2.0.3：36 项库测试、6 项服务测试、包完整性和后台启动/停止/重启检查通过。86 份文章内容与 HTML 历史展示数据一致；未重新执行 Finder 视觉验收，Intel 设备未实测。
+App 2.0.5：36 项库测试、6 项服务测试、包完整性和后台启动/停止/重启检查通过。86 份文章内容与 HTML 历史展示数据一致；未重新执行 Finder 视觉验收，Intel 设备未实测。
 
-HTML 2.0.2：26 篇双语内容、内嵌资源、记录往返与完整脚本 DOM 模拟测试通过。Chrome file:// 自动化实机验收尚未完成；不得把模拟测试视为全浏览器兼容保证。
+HTML 2.0.4：26 篇双语内容、内嵌资源、记录往返与完整脚本 DOM 模拟测试通过。Chrome file:// 自动化实机验收尚未完成；不得把模拟测试视为全浏览器兼容保证。
 
 ## 许可
 
