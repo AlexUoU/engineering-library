@@ -6,7 +6,7 @@
 
 | 版本 | 下载 | 使用方式 |
 |---|---|---|
-| 独立 HTML 2.0.4 | [HTML Release](https://github.com/AlexUoU/engineering-library/releases/tag/html-v2.0.4) | 下载 HTML，在浏览器打开，无需 Python 或本地服务 |
+| 独立 HTML 2.1.1 | [HTML Release](https://github.com/AlexUoU/engineering-library/releases/tag/html-v2.1.1) | 下载 HTML，在浏览器打开，无需 Python 或本地服务 |
 | macOS App 2.0.5 | [App Release](https://github.com/AlexUoU/engineering-library/releases/tag/app-v2.0.5) | 完整解压 ZIP，双击工程实践.app；后台运行服务并打开浏览器 |
 
 App 是后台启动器，不是独立阅读窗口。支持 Apple Silicon / Intel 原生入口，需要兼容的 Python 3.9+；未公证，首次打开可能触发 macOS 安全提示。双击停止工程实践.app 可结束服务。Windows/Linux 启动脚本仍需保留终端，未实机验收。
@@ -22,7 +22,7 @@ App 是后台启动器，不是独立阅读窗口。支持 Apple Silicon / Intel
 Python 标准库即可运行 `python3 server.py --no-check`。源码初始内容为导读种子；完整缓存见发行 ZIP。制作端联网准备与本地翻译属于独立流程，模型依赖见 translation-requirements.txt；读者不需要模型。
 
 - 生成包：`python3 library.py package`（需要完整本地数据）。
-- 单文件：将完整发行包保存为 output/engineering-library-latest.zip，然后 `python3 standalone/build.py 2.0.4`。已存在的发布目录拒绝覆盖。
+- 单文件：将完整发行包保存为 output/engineering-library-latest.zip，然后 `python3 standalone/build.py 2.1.1`。已存在的发布目录拒绝覆盖。
 - 测试：`python3 -m unittest discover -s tests`。
 - HTML 测试：`node standalone/test-startup.cjs <HTML路径>` 和 `node standalone/test.cjs <HTML路径>`。
 - 原生入口源代码：native/Launcher.m；双架构构建需 macOS/Xcode 与 Cocoa 框架。
@@ -31,7 +31,7 @@ Python 标准库即可运行 `python3 server.py --no-check`。源码初始内容
 
 App 2.0.5：36 项库测试、6 项服务测试、包完整性和后台启动/停止/重启检查通过。86 份文章内容与 HTML 历史展示数据一致；未重新执行 Finder 视觉验收，Intel 设备未实测。
 
-HTML 2.0.4：26 篇双语内容、内嵌资源、记录往返与完整脚本 DOM 模拟测试通过。Chrome file:// 自动化实机验收尚未完成；不得把模拟测试视为全浏览器兼容保证。
+HTML 2.1.1：26 篇双语内容、86 份历史内容、92 个内嵌资源及完整脚本测试通过。本机浏览器预览验证了响应式布局、双语切换、思考保存与刷新恢复、JSON 导出导入及去重。用户于 2026-10-24 确认本地文件验收通过并授权发布；file:// 不属于自动化已覆盖范围。详见 [发布审查](docs/html-2.1.1-review.md)。
 
 ## 许可
 
